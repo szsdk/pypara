@@ -6,15 +6,14 @@ import multiprocessing as mp
 import click
 import itertools as it
 import more_itertools as mi
+from pathlib import Path
 
 
-def load_from_file(filepath):
-    class_inst = None
-    mod_name, file_ext = os.path.splitext(os.path.split(filepath)[-1])
-
-    if file_ext.lower() == '.py':
-        py_mod = SourceFileLoader(mod_name, filepath).load_module()
-    return py_mod
+def load_from_file(filepath: Path):
+    if filepath.suffix.lower() == '.py':
+        return SourceFileLoader(filepath.stem, str(filepath)).load_module()
+    else:
+        raise Exception(f"can not load {filepath}")
 
 class RunCmd:
     def __init__(self, cmd):
@@ -32,23 +31,44 @@ def get_default_generator(input, splitby):
     return wrap()
 
 @click.command(context_settings={"ignore_unknown_options":True},
-        help=\
-"""
-pypara --generator "12 2" --run "echo {}"
+        help="""Example:
+
+`pypara -p example1.py`
+
+\b
+use ruuning function from example1.py with given generator
+`pypara -p example1.py -g "1 2 3"`
+
+\b
+use generator from example1.py with given running command
+`pypara -p example1.py -r "echo cmd{}"`
+
+\b
+Pass argument to generator in example2.py
+`pypara -p example2.py --run "echo cmd{}" --count 3`
+
+\b
+With pipe
+`echo "0 1 2" | pypara -g - --run "echo cmd{}"`
+
+\b
+Change spliting character
+`pypara -g "0_1_2" --run "echo cmd{}" --splitby "_"`
 """)
-@click.option("--pkg", "-p", default=None, type=str, help="")
+@click.option("--pkg", "-p", default=None, type=Path,
+        help="path to a python file, which usually includes a variable/function for generator and a function to be called.")
 @click.option("--run", "-r", default=None, help="")
 @click.option("--nproc", "-n", type=int, default=mp.cpu_count(),
-        help="")
+        help="number of processes for running command")
 @click.option("--generator", "-g", default=None, help="")
-@click.option("--splitby", default=" ", type=str)
-@click.option("--test", is_flag=True, help="")
+@click.option("--splitby", default=" ", type=str,
+        help="character used for splitting input string")
+@click.option("--test", is_flag=True,
+        help="Test mode, only run the first output from the generator")
 @click.argument('params', nargs=-1, type=click.UNPROCESSED)
-def cli(params, pkg, nproc, test, generator, run, splitby):
-    try:
+def cli(params, pkg: Path, nproc: int, test: bool, generator, run, splitby):
+    if pkg is not None:
         pkg = load_from_file(pkg)
-    except:
-        pass
 
     if generator is not None:
         generator = get_default_generator(generator, splitby)
