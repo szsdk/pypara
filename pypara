@@ -57,7 +57,8 @@ Change spliting character
 """)
 @click.option("--pkg", "-p", default=None, type=Path,
         help="path to a python file, which usually includes a variable/function for generator and a function to be called.")
-@click.option("--run", "-r", default=None, help="")
+@click.option("--run", "-r", default=None, type=str,
+        help="shell command to be run, example: `'echo {}'`")
 @click.option("--nproc", "-n", type=int, default=mp.cpu_count(),
         help="number of processes for running command")
 @click.option("--generator", "-g", default=None, help="")
