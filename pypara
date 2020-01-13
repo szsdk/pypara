@@ -1,0 +1,78 @@
+#!/usr/bin/env python3
+from importlib.machinery import SourceFileLoader
+import os
+import sys
+import multiprocessing as mp
+import click
+import itertools as it
+import more_itertools as mi
+
+
+def load_from_file(filepath):
+    class_inst = None
+    mod_name, file_ext = os.path.splitext(os.path.split(filepath)[-1])
+
+    if file_ext.lower() == '.py':
+        py_mod = SourceFileLoader(mod_name, filepath).load_module()
+    return py_mod
+
+class RunCmd:
+    def __init__(self, cmd):
+        self.cmd = cmd
+    def __call__(self, f):
+        os.system(self.cmd.format(f))
+
+def get_default_generator(input, splitby):
+    input = it.chain.from_iterable(sys.stdin) if input == '-' else input
+    def wrap():
+        for x in mi.split_at(input, lambda x: x in splitby):
+            x = ''.join(x).strip()
+            if len(x) > 0:
+                yield x
+    return wrap()
+
+@click.command(context_settings={"ignore_unknown_options":True},
+        help=\
+"""
+pypara --generator "12 2" --run "echo {}"
+""")
+@click.option("--cmd_pkg", "-c", help="")
+@click.option("--run", default=None, help="")
+@click.option("--nproc", "-n", type=int, default=mp.cpu_count(),
+        help="")
+@click.option("--generator", "-g", default=None, help="")
+@click.option("--splitby", default=" ", type=str)
+@click.option("--test", is_flag=True, help="")
+@click.argument('params', nargs=-1, type=click.UNPROCESSED)
+def cli(params, cmd_pkg, nproc, test, generator, run, splitby):
+    pkg = None
+    try:
+        pkg = load_from_file(cmd_pkg)
+    except:
+        pass
+
+    if generator is not None:
+        generator = get_default_generator(generator, splitby)
+    elif pkg is not None and hasattr(pkg, "generator"):
+        if isinstance(pkg.generator, click.Command):
+            generator = pkg.generator(params, standalone_mode=False)
+        else:
+            generator = pkg.generator
+    else:
+        raise Exception("Can not identify generator")
+
+    if run is not None:
+        run = RunCmd(run)
+    elif pkg is not None and hasattr(pkg, "run"):
+        run = pkg.run
+    else:
+        raise Exception("Can not identify run")
+
+    if test:
+        run(next(iter(generator)))
+    else:
+        pool = mp.Pool(nproc)
+        result = pool.map(run, generator)
+
+if __name__ == "__main__":
+    cli()
