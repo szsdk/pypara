@@ -36,18 +36,17 @@ def get_default_generator(input, splitby):
 """
 pypara --generator "12 2" --run "echo {}"
 """)
-@click.option("--cmd_pkg", "-c", help="")
-@click.option("--run", default=None, help="")
+@click.option("--pkg", "-p", default=None, type=str, help="")
+@click.option("--run", "-r", default=None, help="")
 @click.option("--nproc", "-n", type=int, default=mp.cpu_count(),
         help="")
 @click.option("--generator", "-g", default=None, help="")
 @click.option("--splitby", default=" ", type=str)
 @click.option("--test", is_flag=True, help="")
 @click.argument('params', nargs=-1, type=click.UNPROCESSED)
-def cli(params, cmd_pkg, nproc, test, generator, run, splitby):
-    pkg = None
+def cli(params, pkg, nproc, test, generator, run, splitby):
     try:
-        pkg = load_from_file(cmd_pkg)
+        pkg = load_from_file(pkg)
     except:
         pass
 
