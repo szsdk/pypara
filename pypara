@@ -8,6 +8,7 @@ import itertools as it
 import more_itertools as mi
 from pathlib import Path
 
+sys.dont_write_bytecode = True
 
 def load_from_file(filepath: Path):
     if filepath.suffix.lower() == '.py':
