@@ -20,7 +20,7 @@ class RunCmd:
     def __init__(self, cmd):
         self.cmd = cmd
     def __call__(self, f):
-        os.system(self.cmd.format(f))
+        os.system(self.cmd.format(f=f))
 
 def get_default_generator(input, splitby):
     input = it.chain.from_iterable(sys.stdin) if input == '-' else input
