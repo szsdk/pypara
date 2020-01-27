@@ -19,6 +19,8 @@ def load_from_file(filepath: Path):
 class RunCmd:
     def __init__(self, cmd):
         self.cmd = cmd
+        self.__doc__ = f"run shell command: {cmd}"
+
     def __call__(self, f):
         os.system(self.cmd.format(f=f))
 
@@ -67,10 +69,34 @@ Change spliting character
         help="character used for splitting input string")
 @click.option("--test", is_flag=True,
         help="Test mode, only run the first output from the generator")
+@click.option("--subhelp", is_flag=True,
+        help="get help doc from package")
 @click.argument('params', nargs=-1, type=click.UNPROCESSED)
-def cli(params, pkg: Path, nproc: int, test: bool, generator, run, splitby):
+def cli(params, pkg: Path, nproc: int, test: bool, generator, run, splitby, subhelp):
     if pkg is not None:
         pkg = load_from_file(pkg)
+
+    if subhelp:
+        doc = getattr(pkg, "__doc__", None)
+        if doc:
+            print("=== Script help === ")
+            print(doc)
+        if isinstance(getattr(pkg, "generator", None), click.Command):
+            print("=== Generator help === ")
+            pkg.generator(['--help'], standalone_mode=False)
+        else:
+            if generator:
+                print("=== Generator help === ")
+                print(generator)
+
+        if run:
+            doc = run
+        elif hasattr(pkg, "run"):
+            doc = getattr(pkg.run, "__doc__")
+        if doc:
+            print("=== Run help === ")
+            print(doc)
+        return
 
     if generator is not None:
         generator = get_default_generator(generator, splitby)
@@ -88,6 +114,7 @@ def cli(params, pkg: Path, nproc: int, test: bool, generator, run, splitby):
         run = pkg.run
     else:
         raise Exception("Can not identify run")
+
 
     if test:
         run(next(iter(generator)))
