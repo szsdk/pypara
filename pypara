@@ -4,6 +4,7 @@ import os
 import sys
 import multiprocessing as mp
 import click
+from inspect import signature
 import itertools as it
 import more_itertools as mi
 from pathlib import Path
@@ -115,12 +116,15 @@ def cli(params, pkg: Path, nproc: int, test: bool, generator, run, splitby, subh
     else:
         raise Exception("Can not identify run")
 
-
+    star = len(signature(run).parameters.keys()) > 1
     if test:
-        run(next(iter(generator)))
+        generator = [(next(iter(generator)))]
+    pool = mp.Pool(nproc)
+    if star:
+        result = pool.starmap(run, generator)
     else:
-        pool = mp.Pool(nproc)
         result = pool.map(run, generator)
+
 
 if __name__ == "__main__":
     cli()
