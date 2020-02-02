@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+import sys
+import click
+import itertools as it
+from pathlib import Path
+import more_itertools as mi
+import re
+try:
+    import numpy as np
+except:
+    pass
+
+try:
+    from toolz import *
+except:
+    pass
+
+
+def get_default_generator(splitby):
+    input = it.chain.from_iterable(sys.stdin)
+    def wrap():
+        for x in mi.split_at(input, lambda x: x in splitby):
+            x = ''.join(x).strip()
+            yield x
+    return wrap()
+
+def print_result(res, joinby):
+    excluded_types = [str, np.ndarray]
+    print_it = False
+    for et in excluded_types:
+        if isinstance(res, et):
+            print_it = True
+            break
+    if isiterable(res) and not print_it:
+        print(joinby[0].join(res))
+    else:
+        print(res)
+
+@click.command()
+@click.argument('cmds', nargs=-1)
+@click.option('--auto/--no-auto', default=True, help="")
+@click.option("--splitby", default="\n", type=str,
+        help="character used for splitting input string")
+def cli(cmds, auto, splitby):
+    I = get_default_generator(splitby)
+    if auto:
+        for cmd in cmds:
+            print_result(eval(cmd), "\n")
+    else:
+        for cmd in cmds:
+            exec(cmd)
+
+if __name__ == "__main__":
+    cli()

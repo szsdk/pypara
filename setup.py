@@ -4,6 +4,6 @@ setup(
     name             = 'pypara',
     version          = '0.1',
     author           = 'szsdk',
-    scripts=['pypara'],
-    install_requires = ['click'],
+    scripts=['pypara', "pyr"],
+    install_requires = ['click', "more_itertools", "toolz"],
 )
