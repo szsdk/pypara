@@ -9,3 +9,6 @@ pypara -p example2.py --run "echo cmd{}" --count 3
 echo "0 1 2" | pypara -g - --run "echo cmd{}"
 # Change spliting character
 pypara -g "0_1_2" --run "echo cmd{}" --splitby "_"
+# Example for process lock
+pypara -p example3.py 
+pypara -p example3.py --lock
