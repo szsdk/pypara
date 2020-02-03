@@ -11,7 +11,8 @@ except:
     pass
 
 try:
-    from toolz import *
+    from toolz.curried import *
+    C = compose
 except:
     pass
 
@@ -41,11 +42,13 @@ def print_result(res, joinby):
 @click.option('--auto/--no-auto', default=True, help="")
 @click.option("--splitby", default="\n", type=str,
         help="character used for splitting input string")
-def cli(cmds, auto, splitby):
+@click.option("--joinby", default=" ", type=str,
+        help="character used for join auto printed results")
+def cli(cmds, auto, splitby, joinby):
     I = get_default_generator(splitby)
     if auto:
         for cmd in cmds:
-            print_result(eval(cmd), "\n")
+            print_result(eval(cmd), joinby)
     else:
         for cmd in cmds:
             exec(cmd)
