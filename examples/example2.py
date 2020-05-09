@@ -1,5 +1,5 @@
 # run by
-# pypara -p example2.py --run "echo {}" --count 3
+# pypara -p example2.py --run "echo {f}" --count 3
 
 import click
 

@@ -45,24 +45,24 @@ use ruuning function from example1.py with given generator
 
 \b
 use generator from example1.py with given running command
-`pypara -p example1.py -r "echo cmd{}"`
+`pypara -p example1.py -r "echo cmd{f}"`
 
 \b
 Pass argument to generator in example2.py
-`pypara -p example2.py --run "echo cmd{}" --count 3`
+`pypara -p example2.py --run "echo cmd{f}" --count 3`
 
 \b
 With pipe
-`echo "0 1 2" | pypara -g - --run "echo cmd{}"`
+`echo "0 1 2" | pypara -g - --run "echo cmd{f}"`
 
 \b
 Change spliting character
-`pypara -g "0_1_2" --run "echo cmd{}" --splitby "_"`
+`pypara -g "0_1_2" --run "echo cmd{f}" --splitby "_"`
 """)
 @click.option("--pkg", "-p", default=None, type=Path,
         help="path to a python file, which usually includes a variable/function for generator and a function to be called.")
 @click.option("--run", "-r", default=None, type=str,
-        help="shell command to be run, example: `'echo {}'`")
+        help="shell command to be run, example: `'echo {f}'`")
 @click.option("--nproc", "-n", type=int, default=mp.cpu_count(),
         help="number of processes for running command")
 @click.option("--generator", "-g", default=None, help="")
