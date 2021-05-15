@@ -5,5 +5,6 @@
 
 generator = range(3)
 
+
 def run(i):
     print(i)

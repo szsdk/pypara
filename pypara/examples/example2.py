@@ -3,6 +3,7 @@
 
 import click
 
+
 @click.command()
 @click.option("--count", "-c", type=int)
 def generator(count):
