@@ -152,5 +152,22 @@ def cli(params, pkg: Path, nproc: int, test: bool, generator, run, splitby, subh
         result = pool.map(run, generator)
 
 
+def example():
+    import pkgutil
+
+    FOLDER = (
+        Path(pkgutil.get_loader("pypara").get_filename()).absolute().parent / "examples"
+    )
+    if len(sys.argv) == 2:
+        for e in FOLDER.glob("example*"):
+            print(e)
+    elif len(sys.argv) == 3:
+        with (FOLDER / f"example{sys.argv[2]}.py").open() as fp:
+            print(fp.read())
+
+
 if __name__ == "__main__":
-    cli()
+    if sys.argv[1] == "example":
+        example()
+    else:
+        cli()
