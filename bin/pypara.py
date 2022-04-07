@@ -4,6 +4,7 @@ import os
 import sys
 import multiprocessing as mp
 import click
+from click_default_group import DefaultGroup
 from inspect import signature
 import itertools as it
 import more_itertools as mi
@@ -29,7 +30,12 @@ class RunCmd:
 
 
 def get_default_generator(input, splitby):
-    input = it.chain.from_iterable(sys.stdin) if input == "-" else input
+    if input != "-":
+        ans = {}
+        exec(f"__ans = {input}", {}, ans)
+        return ans["__ans"]
+
+    input = it.chain.from_iterable(sys.stdin)
 
     def wrap():
         for x in mi.split_at(input, lambda x: x in splitby):
@@ -40,10 +46,26 @@ def get_default_generator(input, splitby):
     return wrap()
 
 
-@click.command(
+@click.group(cls=DefaultGroup, default='main', default_if_no_args=True)
+def cli():
+    pass
+
+
+@cli.command(
     context_settings={"ignore_unknown_options": True},
     help="""Example:
 
+`pypara -g "range(10)" -r "echo {f}"`
+
+\b
+With pipe
+`echo "0 1 2" | pypara --run "echo cmd{f}"`
+
+\b
+Change spliting character
+`echo "0\\n1\\n2" | pypara  --run "echo cmd{f}" --splitby $'\\n'`
+
+\b
 `pypara -p example1.py`
 
 \b
@@ -57,14 +79,6 @@ use generator from example1.py with given running command
 \b
 Pass argument to generator in example2.py
 `pypara -p example2.py --run "echo cmd{f}" --count 3`
-
-\b
-With pipe
-`echo "0 1 2" | pypara -g - --run "echo cmd{f}"`
-
-\b
-Change spliting character
-`pypara -g "0_1_2" --run "echo cmd{f}" --splitby "_"`
 """,
 )
 @click.option(
@@ -88,9 +102,9 @@ Change spliting character
     default=mp.cpu_count(),
     help="number of processes for running command",
 )
-@click.option("--generator", "-g", default=None, help="")
+@click.option("--generator", "-g", default="-", help="")
 @click.option(
-    "--splitby", default=" ", type=str, help="character used for splitting input string"
+    "-s", "--splitby", default=" ", type=str, help="character used for splitting input string"
 )
 @click.option(
     "--test",
@@ -99,7 +113,7 @@ Change spliting character
 )
 @click.option("--subhelp", is_flag=True, help="get help doc from package")
 @click.argument("params", nargs=-1, type=click.UNPROCESSED)
-def cli(params, pkg: Path, nproc: int, test: bool, generator, run, splitby, subhelp):
+def main(params, pkg: Path, nproc: int, test: bool, generator, run, splitby, subhelp):
     if pkg is not None:
         pkg = load_from_file(pkg)
 
@@ -152,22 +166,21 @@ def cli(params, pkg: Path, nproc: int, test: bool, generator, run, splitby, subh
         result = pool.map(run, generator)
 
 
-def example():
+@cli.command()
+@click.argument("index", type=int, default=-1)
+def example(index):
     import pkgutil
 
     FOLDER = (
         Path(pkgutil.get_loader("pypara").get_filename()).absolute().parent / "examples"
     )
-    if len(sys.argv) == 2:
+    if index == -1:
         for e in FOLDER.glob("example*"):
             print(e)
-    elif len(sys.argv) == 3:
-        with (FOLDER / f"example{sys.argv[2]}.py").open() as fp:
+    else:
+        with (FOLDER / f"example{index}.py").open() as fp:
             print(fp.read())
 
 
 if __name__ == "__main__":
-    if sys.argv[1] == "example":
-        example()
-    else:
-        cli()
+    cli()
