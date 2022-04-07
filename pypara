@@ -11,11 +11,13 @@ from pathlib import Path
 
 sys.dont_write_bytecode = True
 
+
 def load_from_file(filepath: Path):
-    if filepath.suffix.lower() == '.py':
+    if filepath.suffix.lower() == ".py":
         return SourceFileLoader(filepath.stem, str(filepath)).load_module()
     else:
         raise Exception(f"can not load {filepath}")
+
 
 class RunCmd:
     def __init__(self, cmd):
@@ -25,17 +27,22 @@ class RunCmd:
     def __call__(self, f):
         os.system(self.cmd.format(f=f))
 
+
 def get_default_generator(input, splitby):
-    input = it.chain.from_iterable(sys.stdin) if input == '-' else input
+    input = it.chain.from_iterable(sys.stdin) if input == "-" else input
+
     def wrap():
         for x in mi.split_at(input, lambda x: x in splitby):
-            x = ''.join(x).strip()
+            x = "".join(x).strip()
             if len(x) > 0:
                 yield x
+
     return wrap()
 
-@click.command(context_settings={"ignore_unknown_options":True},
-        help="""Example:
+
+@click.command(
+    context_settings={"ignore_unknown_options": True},
+    help="""Example:
 
 `pypara -p example1.py`
 
@@ -58,21 +65,40 @@ With pipe
 \b
 Change spliting character
 `pypara -g "0_1_2" --run "echo cmd{f}" --splitby "_"`
-""")
-@click.option("--pkg", "-p", default=None, type=Path,
-        help="path to a python file, which usually includes a variable/function for generator and a function to be called.")
-@click.option("--run", "-r", default=None, type=str,
-        help="shell command to be run, example: `'echo {f}'`")
-@click.option("--nproc", "-n", type=int, default=mp.cpu_count(),
-        help="number of processes for running command")
+""",
+)
+@click.option(
+    "--pkg",
+    "-p",
+    default=None,
+    type=Path,
+    help="path to a python file, which usually includes a variable/function for generator and a function to be called.",
+)
+@click.option(
+    "--run",
+    "-r",
+    default=None,
+    type=str,
+    help="shell command to be run, example: `'echo {f}'`",
+)
+@click.option(
+    "--nproc",
+    "-n",
+    type=int,
+    default=mp.cpu_count(),
+    help="number of processes for running command",
+)
 @click.option("--generator", "-g", default=None, help="")
-@click.option("--splitby", default=" ", type=str,
-        help="character used for splitting input string")
-@click.option("--test", is_flag=True,
-        help="Test mode, only run the first output from the generator")
-@click.option("--subhelp", is_flag=True,
-        help="get help doc from package")
-@click.argument('params', nargs=-1, type=click.UNPROCESSED)
+@click.option(
+    "--splitby", default=" ", type=str, help="character used for splitting input string"
+)
+@click.option(
+    "--test",
+    is_flag=True,
+    help="Test mode, only run the first output from the generator",
+)
+@click.option("--subhelp", is_flag=True, help="get help doc from package")
+@click.argument("params", nargs=-1, type=click.UNPROCESSED)
 def cli(params, pkg: Path, nproc: int, test: bool, generator, run, splitby, subhelp):
     if pkg is not None:
         pkg = load_from_file(pkg)
@@ -84,7 +110,7 @@ def cli(params, pkg: Path, nproc: int, test: bool, generator, run, splitby, subh
             print(doc)
         if isinstance(getattr(pkg, "generator", None), click.Command):
             print("=== Generator help === ")
-            pkg.generator(['--help'], standalone_mode=False)
+            pkg.generator(["--help"], standalone_mode=False)
         else:
             if generator:
                 print("=== Generator help === ")

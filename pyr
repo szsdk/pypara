@@ -5,6 +5,7 @@ import itertools as it
 from pathlib import Path
 import more_itertools as mi
 import re
+
 try:
     import numpy as np
 except:
@@ -12,6 +13,7 @@ except:
 
 try:
     from toolz.curried import *
+
     C = compose
 except:
     pass
@@ -19,11 +21,14 @@ except:
 
 def get_default_generator(splitby):
     input = it.chain.from_iterable(sys.stdin)
+
     def wrap():
         for x in mi.split_at(input, lambda x: x in splitby):
-            x = ''.join(x).strip()
+            x = "".join(x).strip()
             yield x
+
     return wrap()
+
 
 def print_result(res, joinby):
     excluded_types = [str, np.ndarray]
@@ -37,13 +42,22 @@ def print_result(res, joinby):
     else:
         print(res)
 
+
 @click.command()
-@click.argument('cmds', nargs=-1)
-@click.option('--auto/--no-auto', default=True, help="")
-@click.option("--splitby", default="\n", type=str,
-        help="character used for splitting input string")
-@click.option("--joinby", default=" ", type=str,
-        help="character used for join auto printed results")
+@click.argument("cmds", nargs=-1)
+@click.option("--auto/--no-auto", default=True, help="")
+@click.option(
+    "--splitby",
+    default="\n",
+    type=str,
+    help="character used for splitting input string",
+)
+@click.option(
+    "--joinby",
+    default=" ",
+    type=str,
+    help="character used for join auto printed results",
+)
 def cli(cmds, auto, splitby, joinby):
     I = get_default_generator(splitby)
     if auto:
@@ -52,6 +66,7 @@ def cli(cmds, auto, splitby, joinby):
     else:
         for cmd in cmds:
             exec(cmd)
+
 
 if __name__ == "__main__":
     cli()
