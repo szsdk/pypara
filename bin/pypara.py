@@ -139,13 +139,13 @@ def main(params, pkg: Path, nproc: int, test: bool, generator, run, splitby, sub
             print(doc)
         return
 
-    if generator is not None:
-        generator = get_default_generator(generator, splitby)
-    elif pkg is not None and hasattr(pkg, "generator"):
+    if pkg is not None and hasattr(pkg, "generator") and generator == "-":
         if isinstance(pkg.generator, click.Command):
             generator = pkg.generator(params, standalone_mode=False)
         else:
             generator = pkg.generator
+    elif generator is not None:
+        generator = get_default_generator(generator, splitby)
     else:
         raise Exception("Can not identify generator")
 
